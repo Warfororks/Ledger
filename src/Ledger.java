@@ -15,13 +15,13 @@ import javax.swing.event.DocumentListener;
 
 class Ledger {
 	
-	Garlicoin grlc;
-	Bitcoin btc;
-	Ethereum eth;
-	Nano nano;
-	Lbry lbry;
-	WABnetwork wab;
-	Dogecoin doge;
+	Crypto grlc;
+	Crypto btc;
+	Crypto eth;
+	Crypto nano;
+	Crypto lbry;
+	Crypto wab;
+	Crypto doge;
 	ArrayList<Crypto> list;
 	JLabel empty1;
 	JLabel empty2;
@@ -155,10 +155,10 @@ class Ledger {
 	}
 	
 	private class WListen extends WindowAdapter {
-		public void windowClosed(WindowEvent e) {
+		public void windowClosed(WindowEvent e) { //when clicking the X button
 			System.out.println("closed");
-			writeToBalance();
-			System.exit(0);
+			writeToBalance(); //updates balances.txt
+			System.exit(0); //quits program
 		}
 	}
 	
@@ -180,6 +180,7 @@ class Ledger {
 		new Ledger();
 	}
 	
+	//everything below this line is used for formatting the ledger and was code not written by me
 	public class SpringUtilities {
 	    /**
 	     * A debugging utility that prints to stdout the component's

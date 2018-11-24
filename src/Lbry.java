@@ -14,7 +14,7 @@ public class Lbry extends Crypto {
 	
 	public void readPrice() { //main method to get the price of the coin
 		try {
-			String lbryAPI = "https://api.coinmarketcap.com/v2/ticker/1298/";
+			String lbryAPI = "https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?CMC_PRO_API_KEY=6278fa27-87ca-4a85-96ec-9f4d7395ceff&id=1298";
 
 			InputStream APIinput = new URL(lbryAPI).openStream();
 			BufferedReader reader = new BufferedReader(new InputStreamReader(APIinput, Charset.forName("UTF-8")));

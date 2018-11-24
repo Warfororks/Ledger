@@ -14,7 +14,7 @@ public class Ethereum extends Crypto {
 	
 	public void readPrice() { //main method to get the price of the coin
 		try {
-			String ethAPI = "https://api.coinmarketcap.com/v2/ticker/1027/";
+			String ethAPI = "https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?CMC_PRO_API_KEY=6278fa27-87ca-4a85-96ec-9f4d7395ceff&id=1027";
 
 			InputStream APIinput = new URL(ethAPI).openStream();
 			BufferedReader reader = new BufferedReader(new InputStreamReader(APIinput, Charset.forName("UTF-8")));

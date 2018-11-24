@@ -14,7 +14,7 @@ public class Dogecoin extends Crypto {
 	
 	public void readPrice() {
 		try {
-			String dogeAPI = "https://api.coinmarketcap.com/v2/ticker/74/";
+			String dogeAPI = "https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?CMC_PRO_API_KEY=6278fa27-87ca-4a85-96ec-9f4d7395ceff&id=74";
 
 			InputStream APIinput = new URL(dogeAPI).openStream();
 			BufferedReader reader = new BufferedReader(new InputStreamReader(APIinput, Charset.forName("UTF-8")));
