@@ -29,7 +29,7 @@ class Ledger {
 	double gTotal;
 	
 	Ledger() throws IOException {
-		JFrame frame = new JFrame("Ledger v0.5");
+		JFrame frame = new JFrame("Ledger v0.6");
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		frame.setSize(500, 500);
 		ImageIcon logo = new ImageIcon(Ledger.class.getResource("/logo.png"));
