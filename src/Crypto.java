@@ -1,46 +1,24 @@
-import java.io.BufferedReader;
-import java.io.IOException;
 import java.text.DecimalFormat;
-
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
 
 public class Crypto {
 	private String name;
-	private String ticker;
 	private double price;
 	private double balance;
 	private ImageIcon icon;
-	private JTextField text;
-	private JLabel labelLeft;
-	private JLabel labelRight;
+	private JTextField text; //balance
+	private JLabel labelLeft; //name, icon
+	private JLabel labelRight; //@ price and total
 	
-	Crypto() {
-
-	}
-	
-	Crypto(String n, String t, String i) {
+	Crypto(String n, double b) {
 		name = n;
-		ticker = t;
-		icon = new ImageIcon(Ledger.class.getResource(i));
-		text = new JTextField("0");
-		labelLeft = new JLabel(leftString(), icon, JLabel.CENTER);
-		labelRight = new JLabel(rightString());
-	}
-	
-	public String readData(BufferedReader reader) { //method to read all API data
-		StringBuilder stringbuild = new StringBuilder();
-		int individualChar;
-		try {
-			while ((individualChar = reader.read()) != -1) { //checks to see if there is a valid ascii character
-				stringbuild.append((char)individualChar);
-			}
-		}
-		catch(IOException e) {
-			System.out.println("Error in reading API");
-		}
-		return stringbuild.toString();
+		balance = b;
+		icon = new ImageIcon(Ledger.class.getResource("/" + n.toLowerCase() + ".png"));
+		text = new JTextField("0"); //default balance
+		labelLeft = new JLabel(leftString(), icon, JLabel.CENTER); //name, icon
+		labelRight = new JLabel(rightString()); //@ price and total
 	}
 	
 	public void setBalance(double b) {
@@ -61,10 +39,6 @@ public class Crypto {
 	
 	public String getName() {
 		return name;
-	}
-	
-	public String getTicker() {
-		return ticker;
 	}
 	
 	public double getPrice() {
@@ -97,18 +71,14 @@ public class Crypto {
 	}
 	
 	public String toString() {
-		return getName() + " (" + getTicker() + ") " + "Balance: " + getBalance() + " @ " + getPrice() + ": " + getUSD();
+		return leftString() + getBalance() + rightString();
 	}
 	
 	public String leftString() {
-		return getName() + " (" + getTicker() + ") " + "Balance: ";
+		return getName() + " Balance: ";
 	}
 	
 	public String rightString() {
 		return " @ " + getPrice() + ": " + getUSD();
-	}
-	
-	public static String subPrice(String str) { //method to parse API data and return price
-		return str.substring(str.indexOf("price")+8, str.indexOf(",", str.indexOf("price")));	 
 	}
 }

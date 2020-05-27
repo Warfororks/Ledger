@@ -2,128 +2,124 @@ import java.awt.Component;
 import java.awt.Container;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.net.URL;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Scanner;
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import com.google.gson.*;
 
 class Ledger {
-	
-	Crypto grlc;
-	Crypto btc;
-	Crypto eth;
-	Crypto nano;
-	Crypto lbry;
-	Crypto wab;
-	Crypto doge;
 	ArrayList<Crypto> list;
-	JLabel empty1;
-	JLabel empty2;
+	JLabel empty;
+	JLabel totalTitle;
 	JLabel grandTotal;
 	double gTotal;
+	StringBuilder url;
+	StringBuilder coins;
+	StringBuilder currencies;
+	Gson gson;
 	
 	Ledger() throws IOException {
-		JFrame frame = new JFrame("Ledger v0.6");
+		url = new StringBuilder("https://api.coingecko.com/api/v3/simple/price?ids="); //api url, need to add IDs of coins
+		currencies = new StringBuilder("&vs_currencies=usd"); //needs to be appended at the end of the url after the ids are added
+		
+		JFrame frame = new JFrame("Ledger v0.7"); //create frame
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		frame.setSize(500, 500);
-		ImageIcon logo = new ImageIcon(Ledger.class.getResource("/logo.png"));
+		ImageIcon logo = new ImageIcon(Ledger.class.getResource("/logo.png")); //use logo
 		frame.setIconImage(logo.getImage());
 
-		init();
+		init(); //read in balance.txt to initialize coins and balances, otherwise create just bitcoin
+		initPrice(); //uses the api url to initialize the prices, totals, and grand total
 		
 		Container contentPane = frame.getContentPane();
 		SpringLayout layout = new SpringLayout();
 		contentPane.setLayout(layout);
 		
-		for(int i = 0; i < list.size(); i++) {
-			contentPane.add(list.get(i).getLabelLeft());
-			contentPane.add(list.get(i).getTextField());
-			contentPane.add(list.get(i).getLabelRight());
+		for(int i = 0; i < list.size(); i++) { //for every coin in the list add its 
+			contentPane.add(list.get(i).getLabelLeft()); //name
+			contentPane.add(list.get(i).getTextField()); //balance
+			contentPane.add(list.get(i).getLabelRight()); //price and total
 		}
 		
-		empty1 = new JLabel();
-		empty2 = new JLabel("Grand Total:");
-		contentPane.add(empty1);
-		contentPane.add(empty2);
-		contentPane.add(grandTotal);
+		empty = new JLabel(); //empty label to keep formatting
+		totalTitle = new JLabel("Grand Total:"); //title of the total
+		contentPane.add(empty);
+		contentPane.add(totalTitle);
+		contentPane.add(grandTotal); //initial grand total is set in initPrice()
 		
 		SpringUtilities s = new SpringUtilities();
-		s.makeGrid(contentPane, 8, 3, 5, 5, 5, 5); //increment first number to increase rows
+		s.makeGrid(contentPane, list.size()+1, 3, 5, 5, 5, 5); //list.size() for every coin and +1 for the grand total
 		
 		frame.pack();
 		frame.setVisible(true);
 		
-		for(int i = 0; i < list.size(); i++) {
+		for(int i = 0; i < list.size(); i++) { //add listeners to each text field to update frame when text field changes
 			list.get(i).getTextField().getDocument().addDocumentListener(new DListen());
 		}
 		
-		frame.addWindowListener(new WListen());
+		frame.addWindowListener(new WListen()); //for closing the program
 	}
 	
-	public void init() throws NumberFormatException, IOException {
-		grlc = new Garlicoin();
-		btc = new Bitcoin();
-		eth = new Ethereum();
-		doge = new Dogecoin();
-		nano = new Nano();
-		lbry = new Lbry();
-		wab = new WABnetwork();
-		
-		list = new ArrayList<>();
-		list.add(grlc);
-		list.add(btc);
-		list.add(eth);
-		list.add(doge);
-		list.add(nano);
-		list.add(lbry);
-		list.add(wab);
-		
-		Scanner inputFile = null;
+	public void init() { //read in balance.txt to initialize coins and balances, otherwise create just bitcoin
+		list = new ArrayList<>(); //create an empty list
 
 		try {
-			inputFile = new Scanner(new File("balance.txt"));
-			int i = 0;
-			String line;
-			//while((line = reader.readLine()) != null) {
+			Scanner inputFile = new Scanner(new File("balance.txt")); //scanner for reading balance.txt
+
 			while(inputFile.hasNextLine()) {
-				line = inputFile.nextLine(); //parse entire line
-				String strTicker = line.substring(0, 4).trim(); //get ticker from line - first three or four characters
+				String line = inputFile.nextLine(); //parse entire line
+
+				String strName = line.substring(0, line.indexOf(':')).trim(); //get name from line - use : to determine
+				Crypto c = new Crypto(strName, Double.parseDouble(line.substring(line.indexOf(':')+1))); //create a coin using the name and balance
 				
-				if(strTicker.equals(list.get(i).getTicker())) list.get(i).setBalance(Double.parseDouble(line.substring(4))); //set balance according to ticker
+				list.add(c); //add a new coin to the list
+				url.append(strName + ','); //append the name and a comma to the url in order to read price data later
 				
-				list.get(i).setText(new Double(list.get(i).getBalance()).toString()); //to initialize balance in the app
-				list.get(i).updateLabel(); //to initialize USDs in the app
-				gTotal += Double.parseDouble(list.get(i).getUSD()); //to initialize a grand total in the app
-				
-				i++;
+				c.setText(new Double(c.getBalance()).toString()); //read balance and set the textfield to equal the balance
 			}
 			inputFile.close();
-			//grandTotal = new JLabel(new DecimalFormat(".##").format(gTotal)); //for initial grand total
 		}
-		catch(FileNotFoundException e) {
-			System.out.println("Balance.txt is not found, initializing balances to 0");
-			for(int i = 0; i < list.size(); i++) {
-				list.get(i).setBalance(0);
-			}
-		}
-		catch(NullPointerException e) {
-			System.out.println("Some sort of error");
+		catch(FileNotFoundException e) { //when balance.txt isn't found
+			System.out.println("Balance.txt is not found, initializing only bitcoin");
+			list.add(new Crypto("Bitcoin", 0.0));
+			url.append("Bitcoin"); //append bitcoin to read price data later
 		}
 		finally {
-			grandTotal = new JLabel(new DecimalFormat(".##").format(gTotal)); //for initial grand total
+			url.append(currencies); //after all coins are added append the usd conversion string
 		}
 	}
 	
-	public void updateBalance() {
+	public void initPrice() { 
+		try {
+			BufferedReader reader = new BufferedReader(new InputStreamReader(new URL(url.toString()).openStream())); //turn the url into a URL and open the reader
+			JsonObject data = (JsonObject)JsonParser.parseString(reader.readLine()); //read the single line with all price data
+			for (Crypto c : list) { //for each coin in the list
+				c.setPrice(data.getAsJsonObject(c.getName().toLowerCase()).getAsJsonPrimitive("usd").getAsDouble()); //get the usd as a double for each coin and set the price
+				c.updateLabel(); //update the price and total on the label
+				gTotal += Double.parseDouble(c.getUSD()); //sum the grand total
+			}
+		} catch (IOException e) {
+			System.out.println("API url is probably busted");
+			e.printStackTrace();
+		} finally {
+			grandTotal = new JLabel(new DecimalFormat(".##").format(gTotal)); //grand total label should be properly formatted to 2 decimals
+		}
+	}
+	
+	public void updateBalance() { //for when the balance text fields are changed
 		try {
 			gTotal = 0;
-			for(int i = 0; i < list.size(); i++) {
+			for(int i = 0; i < list.size(); i++) { //to-do: how to make this more efficient
 				System.out.println(list.get(i).getTextField().getText());
 				list.get(i).setBalance(Double.parseDouble(list.get(i).getTextField().getText()));
 				list.get(i).updateLabel();
@@ -132,26 +128,25 @@ class Ledger {
 			grandTotal.setText(new DecimalFormat(".##").format(gTotal));
 		}
 		catch(NumberFormatException e) {
-			
+			System.out.println("Numbers aren't properly formatted but it doesn't really matter");
 		}
 	}
 	
 	public void writeToBalance() { //called after the app is closed
 		String newLine = "";
-		PrintWriter outputFile = null;
 		
 		try {
-			outputFile = new PrintWriter(new File("balance.txt"));
+			PrintWriter outputFile = new PrintWriter(new File("balance.txt"));
 			
 			for(int i = 0; i < list.size(); i++) {
-				newLine = list.get(i).getTicker() + " " + list.get(i).getBalance();
+				newLine = list.get(i).getName() + ":" + list.get(i).getBalance(); //output line in format name:balance
 				outputFile.println(newLine);
 			}
+			outputFile.close();
 		}
 		catch(FileNotFoundException e) {
 			System.out.println("Balance.txt is not found, cannot rewrite");
 		}
-		outputFile.close();
 	}
 	
 	private class WListen extends WindowAdapter {
@@ -162,7 +157,7 @@ class Ledger {
 		}
 	}
 	
-	private class DListen implements DocumentListener {
+	private class DListen implements DocumentListener { //for inserting/updating/removing anything in the balance text field
 		public void insertUpdate(DocumentEvent e) {
 			updateBalance();
 		}

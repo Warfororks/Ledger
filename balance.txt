@@ -1,0 +1,5 @@
+Bitcoin:0
+Ethereum:0
+Litecoin:0
+Dogecoin:0
+Basic-Attention-Token:0
